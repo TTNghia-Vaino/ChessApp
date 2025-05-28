@@ -676,9 +676,45 @@ public class Offline2PlayerActivity extends AppCompatActivity {
                 }
             }
         }
+        if (khongDuLucChieuHet()) {
+            return true; // Hòa do không đủ lực chiếu hết
+        }
         return true;
     }
+    private boolean khongDuLucChieuHet() {
+        List<QuanCo> trang = new ArrayList<>();
+        List<QuanCo> den = new ArrayList<>();
 
+        for (int hang = 0; hang < 8; hang++) {
+            for (int cot = 0; cot < 8; cot++) {
+                QuanCo quan = banCo[hang][cot];
+                if (quan != null) {
+                    if (quan.laTrang) {
+                        trang.add(quan);
+                    } else {
+                        den.add(quan);
+                    }
+                }
+            }
+        }
+
+        return chiConVuaHoacVuaVa1MaHoacTuong(trang) && chiConVuaHoacVuaVa1MaHoacTuong(den);
+    }
+
+    private boolean chiConVuaHoacVuaVa1MaHoacTuong(List<QuanCo> danhSach) {
+        if (danhSach.size() == 1) {
+            return danhSach.get(0).loai == LoaiQuan.VUA;
+        } else if (danhSach.size() == 2) {
+            boolean coVua = false;
+            boolean coMaHoacTuong = false;
+            for (QuanCo q : danhSach) {
+                if (q.loai == LoaiQuan.VUA) coVua = true;
+                if (q.loai == LoaiQuan.MA || q.loai == LoaiQuan.TUONG) coMaHoacTuong = true;
+            }
+            return coVua && coMaHoacTuong;
+        }
+        return false;
+    }
     private void khoiTaoLaiGame() {
         thanhKetThucGame.setVisibility(View.GONE);
         kichHoatBanCo();
