@@ -15,6 +15,12 @@ import java.util.List;
 import android.widget.LinearLayout;
 import android.widget.Button;
 import android.view.View;
+import java.util.HashMap;
+import java.util.Map;
+import android.widget.SimpleAdapter;
+import java.util.List;
+import java.util.ArrayList;
+
 public class Offline2PlayerActivity extends AppCompatActivity {
 
     GridLayout chessBoard;
@@ -102,7 +108,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         kiemTraTrangThaiGame();
     }
-
     private void veBanCo() {
         int kichThuoc = 8;
         int kichThuocO = getResources().getDisplayMetrics().widthPixels / kichThuoc;
@@ -131,7 +136,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
     private void datQuanCoBanDau() {
         for (int hang = 0; hang < 8; hang++) {
             for (int cot = 0; cot < 8; cot++) {
@@ -169,7 +173,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             banCo[1][cot] = new QuanCo(LoaiQuan.TOT, false);
         }
     }
-
     private void capNhatHienThi() {
         for (int hang = 0; hang < 8; hang++) {
             for (int cot = 0; cot < 8; cot++) {
@@ -217,7 +220,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         textView.buildDrawingCache(true);
         oVuong.setImageBitmap(textView.getDrawingCache());
     }
-
     private void xuLyNhanVaoO(int hang, int cot) {
         if (gameKetThuc) {
             Toast.makeText(this, "Game đã kết thúc!", Toast.LENGTH_SHORT).show();
@@ -252,7 +254,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
     private void chonQuan(int hang, int cot) {
         oVuongDaChon = cacOVuong[hang][cot];
         hangDaChon = hang;
@@ -271,7 +272,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             Toast.makeText(this, "Đã chọn " + layTenQuan(banCo[hang][cot]), Toast.LENGTH_SHORT).show();
         }
     }
-
     private void boChonQuan() {
         if (oVuongDaChon != null) {
             // Khôi phục màu gốc
@@ -283,13 +283,11 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         anCacNuocDiHopLe();
     }
-
     private void hienThiCacNuocDiHopLe() {
         for (int[] nuocDi : cacNuocDiHopLe) {
             cacOVuong[nuocDi[0]][nuocDi[1]].setBackgroundColor(Color.GREEN);
         }
     }
-
     private void anCacNuocDiHopLe() {
         for (int[] nuocDi : cacNuocDiHopLe) {
             int mauGoc = (nuocDi[0] + nuocDi[1]) % 2 == 0 ? mauOSang : mauOToi;
@@ -297,7 +295,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         cacNuocDiHopLe.clear();
     }
-
     private boolean laNuocDiHopLe(int hang, int cot) {
         for (int[] nuocDi : cacNuocDiHopLe) {
             if (nuocDi[0] == hang && nuocDi[1] == cot) {
@@ -306,7 +303,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         return false;
     }
-
     private List<int[]> tinhCacNuocDiHopLeSauChieu(int hang, int cot) {
         List<int[]> cacNuocDiCoBan = tinhCacNuocDiHopLe(hang, cot);
         List<int[]> cacNuocDiHopLe = new ArrayList<>();
@@ -319,7 +315,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         return cacNuocDiHopLe;
     }
-
     private boolean coTheThucHienNuocDi(int tuHang, int tuCot, int denHang, int denCot) {
         // Lưu trạng thái hiện tại
         QuanCo quanGoc = banCo[tuHang][tuCot];
@@ -338,7 +333,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         return !vuaBiChieu;
     }
-
     private List<int[]> tinhCacNuocDiHopLe(int hang, int cot) {
         List<int[]> cacNuocDi = new ArrayList<>();
         QuanCo quan = banCo[hang][cot];
@@ -368,14 +362,14 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         return cacNuocDi;
     }
-
     private void themNuocDiTot(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
         int huong = laTrang ? -1 : 1; // Trắng đi lên (-1), đen đi xuống (+1)
         int hangBatDau = laTrang ? 6 : 1;
+        int hangPhongCap = laTrang ? 0 : 7;
 
         // Đi thẳng 1 ô
         if (laViTriHopLe(hang + huong, cot) && banCo[hang + huong][cot] == null) {
-            cacNuocDi.add(new int[]{hang + huong, cot});
+                cacNuocDi.add(new int[]{hang + huong, cot});
 
             // Đi thẳng 2 ô từ vị trí ban đầu
             if (hang == hangBatDau && banCo[hang + 2 * huong][cot] == null) {
@@ -393,7 +387,39 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
+    private void hienThiDialogChonPhongQuan(int hang, int cot, boolean laTrang) {
+        // Các quân phong cấp: Hậu, Xe, Mã, Tượng
+        final LoaiQuan[] luaChonQuan = {LoaiQuan.HAU, LoaiQuan.XE, LoaiQuan.MA, LoaiQuan.TUONG};
 
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (LoaiQuan loai : luaChonQuan) {
+            Map<String, Object> item = new HashMap<>();
+            QuanCo tempQuan = new QuanCo(loai, laTrang);
+            String tenFile = tempQuan.layTenFile();
+            int imgResId = getResources().getIdentifier(tenFile, "drawable", getPackageName());
+            item.put("img", imgResId);
+            item.put("text", loai.name());
+            items.add(item);
+        }
+
+        SimpleAdapter adapter = new SimpleAdapter(
+                this,
+                items,
+                R.layout.item_dialog_phong_quan,
+                new String[]{"img", "text"},
+                new int[]{R.id.imageViewQuan, R.id.textViewQuan}
+        );
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chọn quân để phong")
+                .setAdapter(adapter, (dialog, which) -> {
+                    LoaiQuan loaiPhong = luaChonQuan[which];
+                    banCo[hang][cot] = new QuanCo(loaiPhong, laTrang);
+                    capNhatHienThi();
+                })
+                .setCancelable(false)
+                .show();
+    }
     private void themNuocDiXe(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
         // Di chuyển theo hàng ngang và hàng dọc
         int[][] cacHuong = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
@@ -415,7 +441,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
     private void themNuocDiMa(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
         int[][] cacNuocDiMa = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
 
@@ -430,7 +455,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
     private void themNuocDiTuong(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
         // Di chuyển theo đường chéo
         int[][] cacHuong = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
@@ -452,13 +476,11 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
     private void themNuocDiHau(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
         // Hậu = Xe + Tượng
         themNuocDiXe(cacNuocDi, hang, cot, laTrang);
         themNuocDiTuong(cacNuocDi, hang, cot, laTrang);
     }
-
     private void themNuocDiVua(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
         int[][] cacNuocDiVua = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
@@ -473,11 +495,9 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
-
     private boolean laViTriHopLe(int hang, int cot) {
         return hang >= 0 && hang < 8 && cot >= 0 && cot < 8;
     }
-
     private void thucHienNuocDi(int tuHang, int tuCot, int denHang, int denCot) {
         QuanCo quan = banCo[tuHang][tuCot];
         QuanCo quanBiAn = banCo[denHang][denCot];
@@ -494,13 +514,21 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         banCo[tuHang][tuCot] = null;
         quan.daDiChuyen = true;
 
+        // Nếu là tốt và tới hàng phong cấp
+        if (quan.loai == LoaiQuan.TOT) {
+            int hangPhongCap = quan.laTrang ? 0 : 7;
+            if (denHang == hangPhongCap) {
+                // Gọi dialog chọn phong quân
+                hienThiDialogChonPhongQuan(denHang, denCot, quan.laTrang);
+                return; // Tạm dừng, đợi người chơi chọn quân phong
+            }
+        }
+
         capNhatHienThi();
     }
-
     private void chuyenLuot() {
         luotTrang = !luotTrang;
     }
-
     private void capNhatTieuDe() {
         String trangThai = "";
         if (gameKetThuc) {
@@ -510,7 +538,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         setTitle("Chơi 2 người - Lượt: " + (luotTrang ? "Trắng" : "Đen") + trangThai);
     }
-
     private void kiemTraTrangThaiGame() {
         dangBiChieu = kiemTraChieuTuong(luotTrang);
 
@@ -652,7 +679,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         return true;
     }
 
-    // Khởi tạo lại game
     private void khoiTaoLaiGame() {
         thanhKetThucGame.setVisibility(View.GONE);
         kichHoatBanCo();
