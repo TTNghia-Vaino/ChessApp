@@ -12,7 +12,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import java.util.ArrayList;
 import java.util.List;
-
+import android.widget.LinearLayout;
+import android.widget.Button;
+import android.view.View;
 public class Offline2PlayerActivity extends AppCompatActivity {
 
     GridLayout chessBoard;
@@ -77,11 +79,21 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
     }
 
+    private LinearLayout thanhKetThucGame;
+    private Button btnChoiLai, btnThoat;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
         setTitle("Chơi 2 người - Lượt: Trắng");
+
+        thanhKetThucGame = findViewById(R.id.thanhKetThucGame);
+        btnChoiLai = findViewById(R.id.btnChoiLai);
+        btnThoat = findViewById(R.id.btnThoat);
+
+        btnChoiLai.setOnClickListener(v -> khoiTaoLaiGame());
+        btnThoat.setOnClickListener(v -> finish());
 
         chessBoard = findViewById(R.id.chessBoard);
         veBanCo();
@@ -503,48 +515,30 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         dangBiChieu = kiemTraChieuTuong(luotTrang);
 
         if (dangBiChieu) {
-            // Kiểm tra xem có thể thoát khỏi chiếu tướng không
             if (kiemTraChieuHet(luotTrang)) {
                 // Chiếu hết - game kết thúc
                 gameKetThuc = true;
                 String nguoiThang = luotTrang ? "Đen" : "Trắng";
 
-                new AlertDialog.Builder(this)
-                        .setTitle("CHIẾU HẾT!")
-                        .setMessage(nguoiThang + " thắng!\n\nBạn có muốn chơi lại không?")
-                        .setPositiveButton("Chơi lại", (dialog, which) -> {
-                            khoiTaoLaiGame();
-                        })
-                        .setNegativeButton("Thoát", (dialog, which) -> {
-                            finish();
-                        })
-                        .setCancelable(false)
-                        .show();
+                hienThiThanhKetThucGame(nguoiThang + " thắng bằng chiếu hết!");
+                voHieuHoaBanCo();
             } else {
-                // Chỉ bị chiếu, chưa hết
-                Toast.makeText(this, "CHIẾU TƯỚNG! " + (luotTrang ? "Trắng" : "Đen") + " phải thoát khỏi chiếu!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "CHIẾU TƯỚNG! " + (luotTrang ? "Trắng" : "Đen") + " phải thoát khỏi chiếu!", Toast.LENGTH_SHORT).show();
             }
         } else {
-            // Kiểm tra hòa cờ (pat - không bị chiếu nhưng không có nước đi hợp lệ)
             if (kiemTraHoaCo(luotTrang)) {
                 gameKetThuc = true;
-                new AlertDialog.Builder(this)
-                        .setTitle("HÒA CỜ!")
-                        .setMessage("Không có nước đi hợp lệ!\n\nBạn có muốn chơi lại không?")
-                        .setPositiveButton("Chơi lại", (dialog, which) -> {
-                            khoiTaoLaiGame();
-                        })
-                        .setNegativeButton("Thoát", (dialog, which) -> {
-                            finish();
-                        })
-                        .setCancelable(false)
-                        .show();
+                hienThiThanhKetThucGame("HÒA CỜ! Không còn nước đi.");
+                voHieuHoaBanCo();
             }
         }
 
         capNhatTieuDe();
     }
-
+    private void hienThiThanhKetThucGame(String thongBao) {
+        thanhKetThucGame.setVisibility(View.VISIBLE);
+        Toast.makeText(this, thongBao, Toast.LENGTH_LONG).show(); // hoặc bạn có thể hiển thị bằng TextView nếu muốn
+    }
     private String layTenQuan(QuanCo quan) {
         if (quan == null) return "";
         String mau = quan.laTrang ? "Trắng" : "Đen";
@@ -560,13 +554,11 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         return tenQuan + " " + mau;
     }
-
     private String layTenViTri(int hang, int cot) {
         char chuCai = (char)('a' + cot);
         int so = 8 - hang;
         return "" + chuCai + so;
     }
-
     private boolean kiemTraChieuTuong(boolean kiemTraTrang) {
         // Tìm vị trí vua
         int hangVua = -1, cotVua = -1;
@@ -599,14 +591,11 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         return false;
     }
-
-
     private boolean kiemTraChieuHet(boolean kiemTraTrang) {
-        // Nếu không bị chiếu thì không thể chiếu hết
+
         if (!kiemTraChieuTuong(kiemTraTrang)) {
             return false;
         }
-
         // Kiểm tra tất cả quân cờ của người chơi hiện tại
         for (int hang = 0; hang < 8; hang++) {
             for (int cot = 0; cot < 8; cot++) {
@@ -623,7 +612,24 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         return true;
     }
-
+    private void voHieuHoaBanCo() {
+        for (int hang = 0; hang < 8; hang++) {
+            for (int cot = 0; cot < 8; cot++) {
+                if (cacOVuong[hang][cot] != null) {
+                    cacOVuong[hang][cot].setEnabled(false);
+                }
+            }
+        }
+    }
+    private void kichHoatBanCo() {
+        for (int hang = 0; hang < 8; hang++) {
+            for (int cot = 0; cot < 8; cot++) {
+                if (cacOVuong[hang][cot] != null) {
+                    cacOVuong[hang][cot].setEnabled(true);
+                }
+            }
+        }
+    }
     private boolean kiemTraHoaCo(boolean kiemTraTrang) {
         if (kiemTraChieuTuong(kiemTraTrang)) {
             return false;
@@ -648,6 +654,9 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
     // Khởi tạo lại game
     private void khoiTaoLaiGame() {
+        thanhKetThucGame.setVisibility(View.GONE);
+        kichHoatBanCo();
+
         gameKetThuc = false;
         dangBiChieu = false;
         luotTrang = true;

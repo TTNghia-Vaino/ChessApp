@@ -1,19 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#444"
     android:gravity="center"
-    android:orientation="vertical"
-    android:background="#444">
+    android:orientation="vertical">
 
+    <!-- Bàn cờ -->
     <GridLayout
         android:id="@+id/chessBoard"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:columnCount="8"
-        android:rowCount="8"
         android:padding="2dp"
-        android:layout_gravity="center">
-    </GridLayout>
+        android:rowCount="8" />
+
+    <!-- Thanh hiển thị khi kết thúc game -->
+    <LinearLayout
+        android:id="@+id/thanhKetThucGame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btnChoiLai"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chơi lại" />
+
+        <Button
+            android:id="@+id/btnThoat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thoát"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
 
 </LinearLayout>
