@@ -22,6 +22,7 @@ import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
 
+
 public class Offline2PlayerActivity extends AppCompatActivity {
 
     GridLayout chessBoard;
@@ -200,6 +201,30 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             banCo[1][cot] = new QuanCo(LoaiQuan.TOT, false);
         }
     }
+    private void datBanCoCustom() {
+        // Xóa bàn cờ
+        for (int hang = 0; hang < 8; hang++) {
+            for (int cot = 0; cot < 8; cot++) {
+                banCo[hang][cot] = null;
+            }
+        }
+
+        // Đặt vua
+        banCo[0][0] = new QuanCo(LoaiQuan.VUA, false); // Vua đen
+        banCo[7][7] = new QuanCo(LoaiQuan.VUA, true);  // Vua trắng
+
+        // Đặt mã
+        banCo[1][2] = new QuanCo(LoaiQuan.MA, false);  // Mã đen
+        banCo[6][5] = new QuanCo(LoaiQuan.MA, true);   // Mã trắng
+
+        // Đặt tượng
+        banCo[1][5] = new QuanCo(LoaiQuan.TUONG, false); // Tượng đen
+        banCo[6][2] = new QuanCo(LoaiQuan.TUONG, true);  // Tượng trắng
+
+        // Đặt xe trắng
+        banCo[7][0] = new QuanCo(LoaiQuan.XE, true); // Xe trắng
+    }
+
     private void capNhatHienThi() {
         for (int hang = 0; hang < 8; hang++) {
             for (int cot = 0; cot < 8; cot++) {
@@ -717,11 +742,17 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
+    private boolean oMauTrang(int hang, int cot) {
+        return (hang + cot) % 2 == 0;
+    }
+
     private boolean kiemTraHoaCo(boolean kiemTraTrang) {
         if (kiemTraChieuTuong(kiemTraTrang)) {
             return false;
         }
-
+        if (khongDuLucChieuHet()) {
+            return true;
+        }
         // Kiểm tra tất cả quân cờ của người chơi hiện tại
         for (int hang = 0; hang < 8; hang++) {
             for (int cot = 0; cot < 8; cot++) {
@@ -736,11 +767,35 @@ public class Offline2PlayerActivity extends AppCompatActivity {
                 }
             }
         }
-        if (khongDuLucChieuHet()) {
-            return true; // Hòa do không đủ lực chiếu hết
-        }
+
         return true;
     }
+    private boolean laHoaTuongCungMau(List<QuanCo> trang, List<QuanCo> den) {
+        if (trang.size() == 2 && den.size() == 2) {
+            int[] posTuongTrang = null;
+            int[] posTuongDen = null;
+
+            // Tìm vị trí tượng trắng
+            for (int hang = 0; hang < 8; hang++) {
+                for (int cot = 0; cot < 8; cot++) {
+                    QuanCo q = banCo[hang][cot];
+                    if (q != null && q.loai == LoaiQuan.TUONG) {
+                        if (q.laTrang && posTuongTrang == null) {
+                            posTuongTrang = new int[]{hang, cot};
+                        } else if (!q.laTrang && posTuongDen == null) {
+                            posTuongDen = new int[]{hang, cot};
+                        }
+                    }
+                }
+            }
+
+            if (posTuongTrang != null && posTuongDen != null) {
+                return oMauTrang(posTuongTrang[0], posTuongTrang[1]) == oMauTrang(posTuongDen[0], posTuongDen[1]);
+            }
+        }
+        return false;
+    }
+
     private boolean khongDuLucChieuHet() {
         List<QuanCo> trang = new ArrayList<>();
         List<QuanCo> den = new ArrayList<>();
@@ -758,8 +813,18 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
 
-        return chiConVuaHoacVuaVa1MaHoacTuong(trang) && chiConVuaHoacVuaVa1MaHoacTuong(den);
+        //Toast.makeText(this, "Quân trắng: " + trang.size() + ", Quân đen: " + den.size(), Toast.LENGTH_SHORT).show();
+
+        boolean ketQua = (
+                chiConVuaHoacVuaVa1MaHoacTuong(trang) && chiConVuaHoacVuaVa1MaHoacTuong(den)
+        ) || laHoaTuongCungMau(trang, den);
+
+        //Toast.makeText(this, ">>> Kết quả khongDuLucChieuHet: " + ketQua, Toast.LENGTH_SHORT).show();
+
+        return ketQua;
     }
+
+
 
     private boolean chiConVuaHoacVuaVa1MaHoacTuong(List<QuanCo> danhSach) {
         if (danhSach.size() == 1) {
@@ -787,6 +852,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         cotDaChon = -1;
         cacNuocDiHopLe.clear();
 
+        setTitle("Chơi 2 người - Lượt: Trắng");
         datQuanCoBanDau();
         capNhatHienThi();
         kiemTraTrangThaiGame();
