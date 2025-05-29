@@ -18,6 +18,7 @@ import android.view.View;
 import java.util.HashMap;
 import java.util.Map;
 import android.widget.SimpleAdapter;
+import java.util.Stack;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -84,15 +85,40 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             return "";
         }
     }
+    public class BuocDi {
+        int tuHang, tuCot, denHang, denCot;
+        QuanCo quanDiChuyen;
+        QuanCo quanBiAn;
+        boolean daDiChuyenCu;
+        boolean luotTrang; // Lưu lượt người chơi trước khi đi
+
+        public BuocDi(int tuHang, int tuCot, int denHang, int denCot,
+                      QuanCo quanDiChuyen, QuanCo quanBiAn, boolean luotTrang) {
+            this.tuHang = tuHang;
+            this.tuCot = tuCot;
+            this.denHang = denHang;
+            this.denCot = denCot;
+            this.quanDiChuyen = quanDiChuyen;
+            this.quanBiAn = quanBiAn;
+            this.daDiChuyenCu = quanDiChuyen.daDiChuyen;
+            this.luotTrang = luotTrang;
+        }
+    }
+
+    private Stack<BuocDi> lichSuBuocDi = new Stack<>();
 
     private LinearLayout thanhKetThucGame;
     private Button btnChoiLai, btnThoat;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chess_board);
         setTitle("Chơi 2 người - Lượt: Trắng");
+
+        Button btnUndo = findViewById(R.id.btnUndo);
+        btnUndo.setOnClickListener(v -> undoNuocDi());
 
         thanhKetThucGame = findViewById(R.id.thanhKetThucGame);
         btnChoiLai = findViewById(R.id.btnChoiLai);
@@ -104,6 +130,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         chessBoard = findViewById(R.id.chessBoard);
         veBanCo();
         datQuanCoBanDau();
+
         capNhatHienThi();
 
         kiemTraTrangThaiGame();
@@ -238,6 +265,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
                 boChonQuan();
             } else if (laNuocDiHopLe(hang, cot)) {
                 // Thực hiện nước đi
+                lichSuBuocDi.push(new BuocDi(hangDaChon, cotDaChon, hang, cot, banCo[hangDaChon][cotDaChon], banCo[hang][cot], luotTrang));
                 thucHienNuocDi(hangDaChon, cotDaChon, hang, cot);
                 boChonQuan();
                 chuyenLuot();
@@ -498,6 +526,28 @@ public class Offline2PlayerActivity extends AppCompatActivity {
     private boolean laViTriHopLe(int hang, int cot) {
         return hang >= 0 && hang < 8 && cot >= 0 && cot < 8;
     }
+    private void undoNuocDi() {
+        if (lichSuBuocDi.isEmpty()) {
+            Toast.makeText(this, "Không có nước nào để quay lại!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        boChonQuan();
+        BuocDi buocCuoi = lichSuBuocDi.pop();
+
+        // Trả lại vị trí cũ
+        banCo[buocCuoi.tuHang][buocCuoi.tuCot] = buocCuoi.quanDiChuyen;
+        banCo[buocCuoi.denHang][buocCuoi.denCot] = buocCuoi.quanBiAn;
+
+        // Khôi phục trạng thái daDiChuyen cũ
+        buocCuoi.quanDiChuyen.daDiChuyen = buocCuoi.daDiChuyenCu;
+
+        // Khôi phục lượt chơi
+        luotTrang  = buocCuoi.luotTrang;
+
+        capNhatHienThi();
+    }
+
+
     private void thucHienNuocDi(int tuHang, int tuCot, int denHang, int denCot) {
         QuanCo quan = banCo[tuHang][tuCot];
         QuanCo quanBiAn = banCo[denHang][denCot];
@@ -508,6 +558,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             thongBao += " (ăn " + layTenQuan(quanBiAn) + ")";
         }
         Toast.makeText(this, thongBao, Toast.LENGTH_SHORT).show();
+
 
         // Thực hiện nước đi
         banCo[denHang][denCot] = quan;
