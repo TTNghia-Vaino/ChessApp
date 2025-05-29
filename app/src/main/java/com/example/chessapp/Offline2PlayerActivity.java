@@ -568,7 +568,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         // Khôi phục lượt chơi
         luotTrang  = buocCuoi.luotTrang;
-
+        capNhatTieuDe();
         capNhatHienThi();
     }
     private void anUndo() {
@@ -824,8 +824,6 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         return ketQua;
     }
 
-
-
     private boolean chiConVuaHoacVuaVa1MaHoacTuong(List<QuanCo> danhSach) {
         if (danhSach.size() == 1) {
             return danhSach.get(0).loai == LoaiQuan.VUA;
@@ -843,7 +841,8 @@ public class Offline2PlayerActivity extends AppCompatActivity {
     private void khoiTaoLaiGame() {
         thanhKetThucGame.setVisibility(View.GONE);
         kichHoatBanCo();
-
+        Button btnUndo = findViewById(R.id.btnUndo);
+        btnUndo.setOnClickListener(v -> undoNuocDi());
         gameKetThuc = false;
         dangBiChieu = false;
         luotTrang = true;
