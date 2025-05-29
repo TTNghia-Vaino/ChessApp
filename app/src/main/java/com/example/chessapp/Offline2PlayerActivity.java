@@ -546,7 +546,10 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         capNhatHienThi();
     }
-
+    private void anUndo() {
+        Button btnUndo = findViewById(R.id.btnUndo);
+        btnUndo.setVisibility(View.GONE);
+    }
 
     private void thucHienNuocDi(int tuHang, int tuCot, int denHang, int denCot) {
         QuanCo quan = banCo[tuHang][tuCot];
@@ -599,7 +602,10 @@ public class Offline2PlayerActivity extends AppCompatActivity {
                 String nguoiThang = luotTrang ? "Đen" : "Trắng";
 
                 hienThiThanhKetThucGame(nguoiThang + " thắng bằng chiếu hết!");
+                setTitle(nguoiThang + " thắng bằng chiếu hết!");
+
                 voHieuHoaBanCo();
+                anUndo();
             } else {
                 Toast.makeText(this, "CHIẾU TƯỚNG! " + (luotTrang ? "Trắng" : "Đen") + " phải thoát khỏi chiếu!", Toast.LENGTH_SHORT).show();
             }
@@ -607,12 +613,15 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             if (kiemTraHoaCo(luotTrang)) {
                 gameKetThuc = true;
                 hienThiThanhKetThucGame("HÒA CỜ! Không còn nước đi.");
+                setTitle("HÒA CỜ! Không còn nước đi.");
+
                 voHieuHoaBanCo();
+                anUndo();
             }
         }
-
-        capNhatTieuDe();
     }
+
+
     private void hienThiThanhKetThucGame(String thongBao) {
         thanhKetThucGame.setVisibility(View.VISIBLE);
         Toast.makeText(this, thongBao, Toast.LENGTH_LONG).show(); // hoặc bạn có thể hiển thị bằng TextView nếu muốn
