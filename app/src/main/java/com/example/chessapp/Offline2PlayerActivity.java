@@ -36,6 +36,14 @@ public class Offline2PlayerActivity extends AppCompatActivity {
     private boolean dangBiChieu = false;
     private int mauOSang = Color.parseColor("#EEEED2");
     private int mauOToi = Color.parseColor("#769656");
+    // Nhập thành bên trắng
+    private boolean daDiChuyenVuaTrang = false;
+    private boolean[] daDiChuyenXeTrang = {false, false}; // [0]: a1, [1]: h1
+
+    // Nhập thành bên đen
+    private boolean daDiChuyenVuaDen = false;
+    private boolean[] daDiChuyenXeDen = {false, false};   // [0]: a8, [1]: h8
+
     enum LoaiQuan {
         TOT, XE, MA, TUONG, HAU, VUA
     }
@@ -130,7 +138,9 @@ public class Offline2PlayerActivity extends AppCompatActivity {
 
         chessBoard = findViewById(R.id.chessBoard);
         veBanCo();
-        datQuanCoBanDau();
+        // đổi bàn cờ từ đủ quân sang ending để test
+        datBanCoCustom();
+        //datQuanCoBanDau();
 
         capNhatHienThi();
 
@@ -202,13 +212,20 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
     }
     private void datBanCoCustom() {
-        // Xóa bàn cờ
         for (int hang = 0; hang < 8; hang++) {
             for (int cot = 0; cot < 8; cot++) {
                 banCo[hang][cot] = null;
             }
         }
+        daDiChuyenVuaTrang = true;
+        // Reset mảng boolean daDiChuyenXeTrang
+        daDiChuyenXeTrang[0] = true;
+        daDiChuyenXeTrang[1] = true;
 
+        daDiChuyenVuaDen = true;
+        // Reset mảng boolean daDiChuyenXeDen
+        daDiChuyenXeDen[0] = true;
+        daDiChuyenXeDen[1] = true;
         // Đặt vua
         banCo[0][0] = new QuanCo(LoaiQuan.VUA, false); // Vua đen
         banCo[7][7] = new QuanCo(LoaiQuan.VUA, true);  // Vua trắng
@@ -222,7 +239,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         banCo[6][2] = new QuanCo(LoaiQuan.TUONG, true);  // Tượng trắng
 
         // Đặt xe trắng
-        banCo[7][0] = new QuanCo(LoaiQuan.XE, true); // Xe trắng
+        banCo[6][1] = new QuanCo(LoaiQuan.XE, true); // Xe trắng
     }
 
     private void capNhatHienThi() {
@@ -410,6 +427,7 @@ public class Offline2PlayerActivity extends AppCompatActivity {
                 break;
             case VUA:
                 themNuocDiVua(cacNuocDi, hang, cot, quan.laTrang);
+                themNhapThanh(cacNuocDi, hang, cot, quan.laTrang);
                 break;
         }
 
@@ -548,6 +566,66 @@ public class Offline2PlayerActivity extends AppCompatActivity {
             }
         }
     }
+    private void themNhapThanh(List<int[]> cacNuocDi, int hang, int cot, boolean laTrang) {
+        if (laTrang) {
+            // Nhập thành bên trắng (vua tại e1 => [7][4])
+            if (!daDiChuyenVuaTrang) {
+                // Nhập thành bên vua (O-O) - sang g1 => [7][6]
+                if (!daDiChuyenXeTrang[1] &&
+                        banCo[7][5] == null && banCo[7][6] == null &&
+                        !biChieu(7, 4, true) &&
+                        !biChieu(7, 5, true) &&
+                        !biChieu(7, 6, true)) {
+                    cacNuocDi.add(new int[]{7, 6});
+                }
+
+                // Nhập thành bên hậu (O-O-O) - sang c1 => [7][2]
+                if (!daDiChuyenXeTrang[0] &&
+                        banCo[7][1] == null && banCo[7][2] == null && banCo[7][3] == null &&
+                        !biChieu(7, 4, true) &&
+                        !biChieu(7, 3, true) &&
+                        !biChieu(7, 2, true)) {
+                    cacNuocDi.add(new int[]{7, 2});
+                }
+            }
+        } else {
+            // Nhập thành bên đen (vua tại e8 => [0][4])
+            if (!daDiChuyenVuaDen) {
+                if (!daDiChuyenXeDen[1] &&
+                        banCo[0][5] == null && banCo[0][6] == null &&
+                        !biChieu(0, 4, false) &&
+                        !biChieu(0, 5, false) &&
+                        !biChieu(0, 6, false)) {
+                    cacNuocDi.add(new int[]{0, 6});
+                }
+
+                if (!daDiChuyenXeDen[0] &&
+                        banCo[0][1] == null && banCo[0][2] == null && banCo[0][3] == null &&
+                        !biChieu(0, 4, false) &&
+                        !biChieu(0, 3, false) &&
+                        !biChieu(0, 2, false)) {
+                    cacNuocDi.add(new int[]{0, 2});
+                }
+            }
+        }
+    }
+    private boolean biChieu(int hang, int cot, boolean laTrang) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                QuanCo quan = banCo[i][j];
+                if (quan != null && quan.laTrang != laTrang) {
+                    List<int[]> nuocDi = tinhCacNuocDiHopLe(i, j);
+                    for (int[] nuoc : nuocDi) {
+                        if (nuoc[0] == hang && nuoc[1] == cot) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean laViTriHopLe(int hang, int cot) {
         return hang >= 0 && hang < 8 && cot >= 0 && cot < 8;
     }
@@ -587,6 +665,48 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         }
         Toast.makeText(this, thongBao, Toast.LENGTH_SHORT).show();
 
+        // --- XỬ LÝ NHẬP THÀNH ---
+        if (quan.loai == LoaiQuan.VUA) {
+            // Vua đi 2 ô ngang = nhập thành
+            if (tuHang == denHang && Math.abs(denCot - tuCot) == 2) {
+                if (quan.laTrang) {
+                    // Vua trắng nhập thành
+                    if (denCot == 6) {
+                        // O-O trắng
+                        banCo[7][5] = banCo[7][7];
+                        banCo[7][7] = null;
+                        daDiChuyenXeTrang[1] = true; // Xe h trắng đã đi
+                    } else if (denCot == 2) {
+                        // O-O-O trắng
+                        banCo[7][3] = banCo[7][0];
+                        banCo[7][0] = null;
+                        daDiChuyenXeTrang[0] = true; // Xe a trắng đã đi
+                    }
+                    daDiChuyenVuaTrang = true;
+                } else {
+                    // Vua đen nhập thành
+                    if (denCot == 6) {
+                        // O-O đen
+                        banCo[0][5] = banCo[0][7];
+                        banCo[0][7] = null;
+                        daDiChuyenXeDen[1] = true; // Xe h đen đã đi
+                    } else if (denCot == 2) {
+                        // O-O-O đen
+                        banCo[0][3] = banCo[0][0];
+                        banCo[0][0] = null;
+                        daDiChuyenXeDen[0] = true; // Xe a đen đã đi
+                    }
+                    daDiChuyenVuaDen = true;
+                }
+                // Cập nhật vị trí vua sau nhập thành
+                banCo[denHang][denCot] = quan;
+                banCo[tuHang][tuCot] = null;
+                quan.daDiChuyen = true;
+
+                capNhatHienThi();
+                return; // Kết thúc luôn vì đã xử lý nhập thành
+            }
+        }
 
         // Thực hiện nước đi
         banCo[denHang][denCot] = quan;
@@ -843,6 +963,17 @@ public class Offline2PlayerActivity extends AppCompatActivity {
         kichHoatBanCo();
         Button btnUndo = findViewById(R.id.btnUndo);
         btnUndo.setOnClickListener(v -> undoNuocDi());
+
+        daDiChuyenVuaTrang = false;
+        // Reset mảng boolean daDiChuyenXeTrang
+        daDiChuyenXeTrang[0] = false;
+        daDiChuyenXeTrang[1] = false;
+
+        daDiChuyenVuaDen = false;
+        // Reset mảng boolean daDiChuyenXeDen
+        daDiChuyenXeDen[0] = false;
+        daDiChuyenXeDen[1] = false;
+
         gameKetThuc = false;
         dangBiChieu = false;
         luotTrang = true;
